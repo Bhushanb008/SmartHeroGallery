@@ -1,6 +1,6 @@
 import { GalleryItem, PageLayout } from "./types";
 
-const TARGET_RATIO = 9 / 16; // 0.5625
+const TARGET_RATIO = 9 / 16;
 
 function closestVideoIndex(
   items: GalleryItem[],
@@ -38,54 +38,53 @@ export function buildPages(
   const pages: PageLayout[] = [];
 
   while (remaining.length >= 3) {
-    let selectedVideoIndex = closestVideoIndex(remaining, lookahead);
-
-    let video: GalleryItem | undefined;
-
-    if (selectedVideoIndex !== -1) {
-      video = remaining.splice(selectedVideoIndex, 1)[0];
-    }
-
-    const images: GalleryItem[] = [];
-    const others: GalleryItem[] = [];
-
-    for (let i = 0; i < remaining.length; i++) {
-      const item = remaining[i];
-      if (item.type === "image") {
-        images.push(item);
-      } else {
-        others.push(item);
-      }
-    }
-
     let left: GalleryItem;
     let rightTop: GalleryItem;
     let rightBottom: GalleryItem;
 
-    if (video && images.length >= 2) {
-  
-      left = video;
+    const selectedVideoIndex = closestVideoIndex(remaining, lookahead);
 
-      rightTop = images.shift()!;
-      rightBottom = images.shift()!;
-    } else {
-      
-      left = remaining.shift()!;
-      rightTop = remaining.shift()!;
+    // Case 1: Good video available
+    if (selectedVideoIndex !== -1) {
 
-      rightBottom = remaining.shift()!;
+      const video =remaining[selectedVideoIndex];
+
+      // find first two images excluding that video index
+      const imageIndexes: number[] = [];
+
+      for (let i = 0; i < remaining.length; i++) {
+        if (i === selectedVideoIndex) continue;
+        if (remaining[i].type === "image") {
+          imageIndexes.push(i);
+        }
+        if (imageIndexes.length === 2) break;
+      }
+
+      if (imageIndexes.length === 2) {
+        left = video;
+        rightTop = remaining[imageIndexes[0]];
+        rightBottom = remaining[imageIndexes[1]];
+
+        // Remove in descending order to avoid index shift
+        const indexesToRemove = [
+          selectedVideoIndex,
+          imageIndexes[0],
+          imageIndexes[1],
+        ].sort((a, b) => b - a);
+
+        for (const index of indexesToRemove) {
+          remaining.splice(index, 1);
+        }
+
+        pages.push({ left, rightTop, rightBottom });
+        continue;
+      }
     }
 
-    // Remove used images
-    remaining.splice(0, 0);
-    
-    remaining.splice(
-      0,
-      remaining.length,
-      ...remaining.filter(
-        (r) => r !== rightTop && r !== rightBottom
-      )
-    );
+    // Case 2: Fallback – just take first 3
+    left = remaining.shift()!;
+    rightTop = remaining.shift()!;
+    rightBottom = remaining.shift()!;
 
     pages.push({ left, rightTop, rightBottom });
   }
