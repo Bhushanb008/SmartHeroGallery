@@ -1,11 +1,8 @@
-import { GalleryItem, PageLayout } from "./types";
+import { GalleryItem, PageLayout } from './types';
 
 const TARGET_RATIO = 9 / 16;
 
-function closestVideoIndex(
-  items: GalleryItem[],
-  lookahead: number
-): number {
+function closestVideoIndex(items: GalleryItem[], lookahead: number): number {
   let bestIndex = -1;
   let smallestDiff = Infinity;
 
@@ -14,7 +11,7 @@ function closestVideoIndex(
   for (let i = 0; i < max; i++) {
     const item = items[i];
 
-    if (item.type !== "video") continue;
+    if (item.type !== 'video') continue;
 
     const ratio = item.aspectRatio ?? TARGET_RATIO;
     const diff = Math.abs(ratio - TARGET_RATIO);
@@ -30,7 +27,7 @@ function closestVideoIndex(
 
 export function buildPages(
   items: GalleryItem[],
-  opts?: { lookahead?: number }
+  opts?: { lookahead?: number },
 ): PageLayout[] {
   const lookahead = opts?.lookahead ?? 12;
 
@@ -46,15 +43,14 @@ export function buildPages(
 
     // Case 1: Good video available
     if (selectedVideoIndex !== -1) {
-
-      const video =remaining[selectedVideoIndex];
+      const video = remaining[selectedVideoIndex];
 
       // find first two images excluding that video index
       const imageIndexes: number[] = [];
 
       for (let i = 0; i < remaining.length; i++) {
         if (i === selectedVideoIndex) continue;
-        if (remaining[i].type === "image") {
+        if (remaining[i].type === 'image') {
           imageIndexes.push(i);
         }
         if (imageIndexes.length === 2) break;
